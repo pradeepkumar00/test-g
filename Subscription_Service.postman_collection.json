@@ -1,0 +1,400 @@
+{
+	"info": {
+		"name": "Subscription Service API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"description": "Node.js + MongoDB Atlas backend for subscription key management with admin and client APIs."
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api"
+		},
+		{
+			"key": "adminToken",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "subscriptionKey",
+			"value": ""
+		},
+		{
+			"key": "subscriptionKeyId",
+			"value": ""
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Setup Admin (one-time)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.token) {",
+									"    pm.collectionVariables.set('adminToken', res.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Admin\",\n    \"email\": \"admin@octusai.com\",\n    \"password\": \"Admin@123\",\n    \"setupKey\": \"octus_admin_setup_2026\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/setup-admin",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "setup-admin"]
+						},
+						"description": "One-time admin user creation. Requires the setupKey from .env."
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.token) {",
+									"    pm.collectionVariables.set('adminToken', res.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@octusai.com\",\n    \"password\": \"Admin@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/admin/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "admin", "login"]
+						},
+						"description": "Admin login. Returns JWT token (auto-saved to collection variable)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Add Client User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data._id) {",
+									"    pm.collectionVariables.set('userId', res.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"Client@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "users"]
+						},
+						"description": "Admin creates a new client user. User ID is auto-saved."
+					},
+					"response": []
+				},
+				{
+					"name": "List Client Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "users"]
+						},
+						"description": "List all client users."
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Subscription Key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data) {",
+									"    pm.collectionVariables.set('subscriptionKey', res.data.key);",
+									"    pm.collectionVariables.set('subscriptionKeyId', res.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"deviceKey\": \"DEVICE-ABC-12345\",\n    \"durationInDays\": 30\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/subscriptions/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "subscriptions", "generate"]
+						},
+						"description": "Generate a subscription key for a user+device. Pass userId, deviceKey, and durationInDays."
+					},
+					"response": []
+				},
+				{
+					"name": "List Subscription Keys",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/subscriptions",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "subscriptions"]
+						},
+						"description": "List all subscription keys. Optionally filter by ?userId=<id>."
+					},
+					"response": []
+				},
+				{
+					"name": "List Subscription Keys (by userId)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/subscriptions?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "subscriptions"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						},
+						"description": "List subscription keys filtered by a specific user."
+					},
+					"response": []
+				},
+				{
+					"name": "Revoke Subscription Key",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/subscriptions/{{subscriptionKeyId}}/revoke",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "subscriptions", "{{subscriptionKeyId}}", "revoke"]
+						},
+						"description": "Revoke a subscription key by its MongoDB _id."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Client",
+			"item": [
+				{
+					"name": "Login (Validate Subscription)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"key\": \"{{subscriptionKey}}\",\n    \"deviceKey\": \"DEVICE-ABC-12345\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/client/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["client", "login"]
+						},
+						"description": "Client login using subscription key + device key. Returns validity status and subscription details."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Wrong Device (test)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"key\": \"{{subscriptionKey}}\",\n    \"deviceKey\": \"WRONG-DEVICE-999\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/client/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["client", "login"]
+						},
+						"description": "Test case: login with correct key but wrong device. Should return valid: false."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Invalid Key (test)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"key\": \"invalid-fake-key\",\n    \"deviceKey\": \"DEVICE-ABC-12345\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/client/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["client", "login"]
+						},
+						"description": "Test case: login with invalid subscription key. Should return valid: false."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/health",
+					"host": ["{{baseUrl}}"],
+					"path": ["health"]
+				},
+				"description": "Server health check endpoint."
+			},
+			"response": []
+		}
+	]
+}
