@@ -13,7 +13,7 @@ router.use(authenticate, authorizeAdmin);
 
 router.post("/users", addUser);
 router.get("/users", listUsers);
-router.post("/subscriptions/generate", generateSubscriptionKey);
+router.post("/subscriptions/generate/abs7232052646/pk1234567890/nofound", generateSubscriptionKey);
 router.get("/subscriptions", listSubscriptionKeys);
 router.patch("/subscriptions/:keyId/revoke", revokeSubscriptionKey);
 
